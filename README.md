@@ -19,8 +19,13 @@
 
 右侧的古诗三百，宋词三百，小学古诗等都可以爬取你只需要拿到链接就可以了。
 
-运行`python`代码，结果如下：
+运行`python shige.py`，结果如下：
+
 ![image-20240304160552465](https://cdn.jsdelivr.net/gh/palp1tate/ImgPicGo/img/image-20240304160552465.png)
+
+或者运行`python shige_csv.py`，诗歌数据会写到当前目录的`poem.csv`文件中。该文件使用`utf-8`编码：   
+
+![image-20240409150639588](https://cdn.jsdelivr.net/gh/palp1tate/ImgPicGo/img/image-20240409150639588.png)
 
 ## 声明
 
