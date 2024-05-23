@@ -59,64 +59,83 @@ def fetch_poem_details(u):
 
     content_tag = soup.find("div", class_="contson")
     if content_tag:
-        poem_details["content"] = content_tag.get_text().strip().replace("\n", "").replace("\u3000", "")
+        poem_details["content"] = (
+            content_tag.get_text().strip().replace("\n", "").replace("\u3000", "")
+        )
 
     trans_annotation_tag = soup.find("div", class_="contyishang")
     trans_text = ""
     annotation_text = ""
     if trans_annotation_tag:
         p_tags = trans_annotation_tag.find_all("p")
-        total_text = "".join(p.get_text().strip() for p in p_tags).replace("\n", "").replace("\u3000", "")
+        total_text = (
+            "".join(p.get_text().strip() for p in p_tags)
+            .replace("\n", "")
+            .replace("\u3000", "")
+        )
         for p_tag in p_tags:
             read_more_div = None
             if "展开阅读全文 ∨" in total_text:
-                read_more_div = p_tag.find("a", text="展开阅读全文 ∨") if p_tag.find("a",
-                                                                                     text="展开阅读全文 ∨") else read_more_div
+                read_more_div = (
+                    p_tag.find("a", text="展开阅读全文 ∨")
+                    if p_tag.find("a", text="展开阅读全文 ∨")
+                    else read_more_div
+                )
                 if read_more_div:
                     href_attr = read_more_div.get("href")
-                    match = re.search(
-                        r"fanyiShow\((\d+),'([A-Z0-9]+)'\)", href_attr
-                    )
+                    match = re.search(r"fanyiShow\((\d+),'([A-Z0-9]+)'\)", href_attr)
                     if match:
                         number = match.group(1)
                         string = match.group(2)
                         full_text_url = f"https://so.gushiwen.cn/nocdn/ajaxfanyi.aspx?id={number}&idjm={string}"
-                        soup_ = BeautifulSoup(
-                            fetch_html(full_text_url), "html.parser"
+                        soup_ = BeautifulSoup(fetch_html(full_text_url), "html.parser")
+                        paragraphs = soup_.find("div", class_="contyishang").find_all(
+                            "p"
                         )
-                        paragraphs = soup_.find(
-                            "div", class_="contyishang"
-                        ).find_all("p")
                         full_text = (
                             "".join(p.get_text().strip() for p in paragraphs)
                             .replace("\n", "")
                             .replace("▲", "")
                             .replace("\u3000", "")
                         )
-                        match = re.compile(r"^译文(.*?)注释(.*)$", re.S).search(full_text)
+                        match = re.compile(r"^译文(.*?)注释(.*)$", re.S).search(
+                            full_text
+                        )
                         if match:
                             trans_text = match.group(1).strip()
                             annotation_text = match.group(2).strip()
                         else:
-                            match = re.compile(r"^韵译(.*?)意译(.*?)注释(.*)$", re.S).search(full_text)
+                            match = re.compile(
+                                r"^韵译(.*?)意译(.*?)注释(.*)$", re.S
+                            ).search(full_text)
                             if match:
                                 trans_text = (
-                                        "韵译："
-                                        + match.group(1).strip()
-                                        + "意译："
-                                        + match.group(2).strip()
+                                    "韵译："
+                                    + match.group(1).strip()
+                                    + "意译："
+                                    + match.group(2).strip()
                                 )
                                 annotation_text = match.group(3).strip()
                     break
             else:
                 if "译文" in p_tag.text:
-                    trans_text += p_tag.get_text().strip().replace("译文", "").replace("\n", "").replace(
-                        "展开阅读全文 ∨",
-                        "").replace(
-                        "\u3000", "")
+                    trans_text += (
+                        p_tag.get_text()
+                        .strip()
+                        .replace("译文", "")
+                        .replace("\n", "")
+                        .replace("展开阅读全文 ∨", "")
+                        .replace("\u3000", "")
+                    )
                 if "注释" in p_tag.text:
-                    annotation_text += p_tag.get_text().strip().replace("注释", "").replace("\n", "").replace(
-                        "展开阅读全文 ∨", "").replace("\u3000", "")
+                    annotation_text += (
+                        p_tag.get_text()
+                        .strip()
+                        .replace("注释", "")
+                        .replace("\n", "")
+                        .replace("展开阅读全文 ∨", "")
+                        .replace("\u3000", "")
+                    )
     poem_details["trans"] = trans_text
     poem_details["annotation"] = annotation_text
 
@@ -125,7 +144,10 @@ def fetch_poem_details(u):
     for div in appreciation_divs:
         label = ""
         if div.find("h2") and (
-                "赏析" in div.find("h2").text or "鉴赏" in div.find("h2").text or "简析" in div.find("h2").text):
+            "赏析" in div.find("h2").text
+            or "鉴赏" in div.find("h2").text
+            or "简析" in div.find("h2").text
+        ):
             label = div.find("h2").text
         if label:
             div_tuple_list.append((label, div))
@@ -144,9 +166,7 @@ def fetch_poem_details(u):
                     string = match.group(2)
                     full_text_url = f"https://so.gushiwen.cn/nocdn/ajaxshangxi.aspx?id={number}&idjm={string}"
                     soup_ = BeautifulSoup(fetch_html(full_text_url), "html.parser")
-                    paragraphs = soup_.find("div", class_="contyishang").find_all(
-                        "p"
-                    )
+                    paragraphs = soup_.find("div", class_="contyishang").find_all("p")
                     appreciation_text = (
                         "".join(p.get_text().strip() for p in paragraphs)
                         .replace("\n", "")
@@ -162,9 +182,11 @@ def fetch_poem_details(u):
     for div in background_divs:
         if div.find("h2") and "创作背景" in div.find("h2").text:
             background_paragraphs = div.find_all("p")
-            background_text = "".join(
-                p.get_text().strip() for p in background_paragraphs
-            ).replace("\n", "").replace("\u3000", "")
+            background_text = (
+                "".join(p.get_text().strip() for p in background_paragraphs)
+                .replace("\n", "")
+                .replace("\u3000", "")
+            )
             poem_details["background"] = background_text
 
     return poem_details
