@@ -31,7 +31,7 @@
 
 ### 爬取单首诗歌
 
-运行`python shige.py`或者运行`python shige_csv.py`，注意输入的单个诗歌的链接，而不是整页的链接。
+运行`python single_shige.py`或者运行`python single_shige_csv.py`，注意输入的单个诗歌的链接，而不是整页的链接。
 
 ![image-20240523115443785](https://cdn.jsdelivr.net/gh/palp1tate/ImgPicGo/img/image-20240523115443785.png)
 
