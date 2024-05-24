@@ -1,2 +1,5 @@
 beautifulsoup4==4.11.1
 requests==2.32.2
+PyYAML==6.0.1
+SQLAlchemy==2.0.30
+mysql-connector-python==8.4.0
