@@ -26,6 +26,29 @@ def extract_poem_urls(html_detail):
     return poems
 
 
+def extract_text(regex, total_text):
+    trans_text = ""
+    annotation_text = ""
+    flag = False
+    match = re.compile(regex, re.S).search(total_text)
+    if match:
+        flag = True
+        if regex == r"^韵译(.*?)意译(.*?)注释(.*?)$":
+            trans_text = (
+                "韵译：" + match.group(1).strip() + "意译：" + match.group(2).strip()
+            )
+            annotation_text = match.group(3).strip()
+        elif regex == r"^直译(.*?)韵译(.*?)注释(.*?)$":
+            trans_text = (
+                "直译：" + match.group(1).strip() + "韵译：" + match.group(2).strip()
+            )
+            annotation_text = match.group(3).strip()
+        else:
+            trans_text = match.group(1).strip()
+            annotation_text = match.group(2).strip()
+    return flag, trans_text, annotation_text
+
+
 def fetch_poem_details(u):
     poem_details = {
         "name": "",
@@ -60,82 +83,112 @@ def fetch_poem_details(u):
     content_tag = soup.find("div", class_="contson")
     if content_tag:
         poem_details["content"] = (
-            content_tag.get_text().strip().replace("\n", "").replace("\u3000", "")
-        )
-
-    trans_annotation_tag = soup.find("div", class_="contyishang")
-    trans_text = ""
-    annotation_text = ""
-    if trans_annotation_tag:
-        p_tags = trans_annotation_tag.find_all("p")
-        total_text = (
-            "".join(p.get_text().strip() for p in p_tags)
+            content_tag.get_text()
+            .strip()
             .replace("\n", "")
             .replace("\u3000", "")
+            .replace(" ", "")
         )
-        for p_tag in p_tags:
-            read_more_div = None
-            if "展开阅读全文 ∨" in total_text:
-                read_more_div = (
-                    p_tag.find("a", text="展开阅读全文 ∨")
-                    if p_tag.find("a", text="展开阅读全文 ∨")
-                    else read_more_div
+
+    trans_annotation_tags = soup.find_all("div", class_="contyishang")
+    trans_text = ""
+    annotation_text = ""
+    regex_list = [
+        r"^韵译(.*?)意译(.*?)注释(.*?)$",
+        r"^直译(.*?)韵译(.*?)注释(.*?)$",
+        r"^译文(.*?)注释(.*?)$",
+        r"^译文(.*?)注解(.*?)$",
+        r"^韵译(.*?)注解(.*?)$",
+        r"^韵译(.*?)注释(.*?)$",
+    ]
+    label_list = ["译文及注释", "注解及译文"]
+    for trans_annotation_tag in trans_annotation_tags:
+        for l in label_list:
+            if l in trans_annotation_tag.get_text():
+                total_text = (
+                    trans_annotation_tag.get_text()
+                    .replace(l, "")
+                    .replace("\n", "")
+                    .replace("\u3000", "")
+                    .replace("\u200b", "")
+                    .replace("▲", "")
+                    .strip()
                 )
-                if read_more_div:
-                    href_attr = read_more_div.get("href")
+                if "展开阅读全文 ∨" in total_text:
+                    a_tag = trans_annotation_tag.find("a", text="展开阅读全文 ∨")
+                    href_attr = a_tag.get("href")
                     match = re.search(r"fanyiShow\((\d+),'([A-Z0-9]+)'\)", href_attr)
                     if match:
                         number = match.group(1)
                         string = match.group(2)
                         full_text_url = f"https://so.gushiwen.cn/nocdn/ajaxfanyi.aspx?id={number}&idjm={string}"
                         soup_ = BeautifulSoup(fetch_html(full_text_url), "html.parser")
-                        paragraphs = soup_.find("div", class_="contyishang").find_all(
-                            "p"
-                        )
+                        t_a_tag = soup_.find("div", class_="contyishang")
                         full_text = (
-                            "".join(p.get_text().strip() for p in paragraphs)
+                            t_a_tag.get_text()
+                            .replace("译文及注释", "")
                             .replace("\n", "")
-                            .replace("▲", "")
                             .replace("\u3000", "")
+                            .replace("\u200b", "")
+                            .replace("▲", "")
+                            .replace(" ", "")
+                            .strip()
                         )
-                        match = re.compile(r"^译文(.*?)注释(.*)$", re.S).search(
-                            full_text
-                        )
-                        if match:
-                            trans_text = match.group(1).strip()
-                            annotation_text = match.group(2).strip()
-                        else:
-                            match = re.compile(
-                                r"^韵译(.*?)意译(.*?)注释(.*)$", re.S
-                            ).search(full_text)
-                            if match:
-                                trans_text = (
-                                    "韵译："
-                                    + match.group(1).strip()
-                                    + "意译："
-                                    + match.group(2).strip()
+                        flag = False
+                        for regex in regex_list:
+                            if flag:
+                                break
+                            else:
+                                flag, trans_text, annotation_text = extract_text(
+                                    regex, full_text
                                 )
-                                annotation_text = match.group(3).strip()
-                    break
-            else:
-                if "译文" in p_tag.text:
-                    trans_text += (
-                        p_tag.get_text()
-                        .strip()
-                        .replace("译文", "")
-                        .replace("\n", "")
-                        .replace("展开阅读全文 ∨", "")
-                        .replace("\u3000", "")
-                    )
-                if "注释" in p_tag.text:
-                    annotation_text += (
-                        p_tag.get_text()
-                        .strip()
-                        .replace("注释", "")
-                        .replace("\n", "")
-                        .replace("展开阅读全文 ∨", "")
-                        .replace("\u3000", "")
-                    )
+                else:
+                    flag = False
+                    for regex in regex_list:
+                        if flag:
+                            break
+                        else:
+                            flag, trans_text, annotation_text = extract_text(
+                                regex, total_text.replace(" ", "")
+                            )
+        if not annotation_text:
+            if "注释" in trans_annotation_tag.get_text():
+                total_text = (
+                    trans_annotation_tag.get_text()
+                    .replace("注释", "")
+                    .replace("\n", "")
+                    .replace("\u3000", "")
+                    .replace("\u200b", "")
+                    .replace("▲", "")
+                    .strip()
+                )
+                if "展开阅读全文 ∨" in total_text:
+                    a_tag = trans_annotation_tag.find("a", text="展开阅读全文 ∨")
+                    href_attr = a_tag.get("href")
+                    match = re.search(r"fanyiShow\((\d+),'([A-Z0-9]+)'\)", href_attr)
+                    if match:
+                        number = match.group(1)
+                        string = match.group(2)
+                        full_text_url = f"https://so.gushiwen.cn/nocdn/ajaxfanyi.aspx?id={number}&idjm={string}"
+                        soup_ = BeautifulSoup(fetch_html(full_text_url), "html.parser")
+                        t_a_tag = soup_.find("div", class_="contyishang")
+                        full_text = (
+                            t_a_tag.get_text()
+                            .replace("注释", "")
+                            .replace("\n", "")
+                            .replace("\u3000", "")
+                            .replace("\u200b", "")
+                            .replace("▲", "")
+                            .replace(" ", "")
+                            .strip()
+                        )
+                        annotation_text = full_text
+                else:
+                    annotation_text = total_text.replace(" ", "")
+
+        if trans_text and annotation_text:
+            break
+
     poem_details["trans"] = trans_text
     poem_details["annotation"] = annotation_text
 
