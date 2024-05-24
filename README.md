@@ -67,3 +67,6 @@ pip install -r requirements.txt
 ## 声明
 
 本爬虫代码仅可用于个人学习用途，切勿用于任何商业用途！！！
+
+## Stargazers over time
+[![Stargazers over time](https://starchart.cc/palp1tate/fetch-gushiwen.svg?variant=light)](https://starchart.cc/palp1tate/fetch-gushiwen)
