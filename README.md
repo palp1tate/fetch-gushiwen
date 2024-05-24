@@ -4,6 +4,28 @@
 
 可以拿去用于个人知识库、知识图谱的创建等其他学习用途。
 
+## 前置条件
+
+克隆项目：
+
+```powershell
+git clone https://github.com/palp1tate/fetch-gushiwen.git
+```
+
+进入项目根目录下载依赖：
+
+```powershell
+#新建虚拟环境并激活
+python -m venv test_env
+source test_env/bin/activate  # 在Unix或MacOS上
+test_env\Scripts\activate     # 在Windows上
+
+#如果不想新建虚拟环境可以省去上面的命令
+pip install -r requirements.txt
+```
+
+如果你有保存诗歌数据到数据库(支持 MySQL)的需求，请修改项目根目录下的`config.yaml`以适配你的 MySQL，同时新建`gushiwen`这个数据库，使用 `poem.sql`新建表，可以用`Navicat`一键导入。
+
 ## 使用
 
 输入古诗文网的链接，即可爬取该页面所有诗歌的诗名，作者，朝代，内容，译文，注释，赏析，创作背景。
@@ -29,9 +51,16 @@
 
 ![image-20240409150639588](https://cdn.jsdelivr.net/gh/palp1tate/ImgPicGo/img/image-20240409150639588.png)
 
+或者运行`python shige_db.py`，诗歌数据会保存到`MySQL`数据库中。
+
+![image-20240524160509353](https://cdn.jsdelivr.net/gh/palp1tate/ImgPicGo/img/image-20240524160509353.png)
+
+效果如下：
+![image-20240524160612590](https://cdn.jsdelivr.net/gh/palp1tate/ImgPicGo/img/image-20240524160612590.png)
+
 ### 爬取单首诗歌
 
-运行`python single_shige.py`或者运行`python single_shige_csv.py`，注意输入的是单个诗歌的链接，而不是整页的链接。
+运行`python single_shige.py`或者运行`python single_shige_csv.py`以及`python single_shige_db.py`，注意输入的是单个诗歌的链接，而不是整页的链接。
 
 ![image-20240523115443785](https://cdn.jsdelivr.net/gh/palp1tate/ImgPicGo/img/image-20240523115443785.png)
 
