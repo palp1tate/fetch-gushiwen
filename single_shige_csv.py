@@ -1,9 +1,11 @@
 import os
 from shige import fetch_poem_details
 
+file_path = "poems.csv"
+
 if __name__ == "__main__":
-    if not os.path.exists("poem.csv"):
-        with open("poem.csv", "w", encoding="utf-8") as f:
+    if not os.path.exists(file_path):
+        with open(file_path, "w", encoding="utf-8") as f:
             f.write(
                 "name,author,dynasty,content,trans,annotation,appreciation,background\n"
             )
@@ -12,7 +14,7 @@ if __name__ == "__main__":
     )
 
     details = fetch_poem_details(url)
-    with open("poem.csv", "a", encoding="utf-8") as f:
+    with open(file_path, "a", encoding="utf-8") as f:
         print(f"Writing details for poem: {details['name']}")
         for key in details:
             details[key] = details[key].replace("\xa0", "")

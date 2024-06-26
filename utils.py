@@ -7,7 +7,8 @@ def load_configuration(file_path: str) -> dict:
         with open(file_path, "r") as f:
             return yaml.safe_load(f)
     except Exception as exc:
-        raise Exception(f"Failed to load configuration from {file_path}: {exc}")
+        print(f"Error occurred while loading configuration: {exc}")
+        return {}
 
 
 def init_engine():

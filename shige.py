@@ -2,6 +2,18 @@ import requests
 import re
 from bs4 import BeautifulSoup
 
+extra_text = "展开阅读全文 ∨"
+parser = "html.parser"
+regex_list = [
+    r"^韵译(.*?)意译(.*?)注释(.*?)$",
+    r"^直译(.*?)韵译(.*?)注释(.*?)$",
+    r"^译文(.*?)注释(.*?)$",
+    r"^译文(.*?)注解(.*?)$",
+    r"^韵译(.*?)注解(.*?)$",
+    r"^韵译(.*?)注释(.*?)$",
+]
+label_list = ["译文及注释", "注解及译文"]
+
 
 def fetch_html(u):
     try:
@@ -14,7 +26,7 @@ def fetch_html(u):
 
 
 def extract_poem_urls(html_detail):
-    soup = BeautifulSoup(html_detail, "html.parser")
+    soup = BeautifulSoup(html_detail, parser)
     poems = []
     for a_tag in soup.find_all("a", href=True):
         href = a_tag["href"]
@@ -61,7 +73,7 @@ def fetch_poem_details(u):
         "background": "",
     }
 
-    soup = BeautifulSoup(fetch_html(u), "html.parser")
+    soup = BeautifulSoup(fetch_html(u), parser)
     title_tag = soup.find("h1")
     if title_tag:
         poem_details["name"] = title_tag.text.strip().replace("\n", "")
@@ -93,15 +105,6 @@ def fetch_poem_details(u):
     trans_annotation_tags = soup.find_all("div", class_="contyishang")
     trans_text = ""
     annotation_text = ""
-    regex_list = [
-        r"^韵译(.*?)意译(.*?)注释(.*?)$",
-        r"^直译(.*?)韵译(.*?)注释(.*?)$",
-        r"^译文(.*?)注释(.*?)$",
-        r"^译文(.*?)注解(.*?)$",
-        r"^韵译(.*?)注解(.*?)$",
-        r"^韵译(.*?)注释(.*?)$",
-    ]
-    label_list = ["译文及注释", "注解及译文"]
     for trans_annotation_tag in trans_annotation_tags:
         for l in label_list:
             if l in trans_annotation_tag.get_text():
@@ -114,15 +117,15 @@ def fetch_poem_details(u):
                     .replace("▲", "")
                     .strip()
                 )
-                if "展开阅读全文 ∨" in total_text:
-                    a_tag = trans_annotation_tag.find("a", text="展开阅读全文 ∨")
+                if extra_text in total_text:
+                    a_tag = trans_annotation_tag.find("a", text=extra_text)
                     href_attr = a_tag.get("href")
                     match = re.search(r"fanyiShow\((\d+),'([A-Z0-9]+)'\)", href_attr)
                     if match:
                         number = match.group(1)
                         string = match.group(2)
                         full_text_url = f"https://so.gushiwen.cn/nocdn/ajaxfanyi.aspx?id={number}&idjm={string}"
-                        soup_ = BeautifulSoup(fetch_html(full_text_url), "html.parser")
+                        soup_ = BeautifulSoup(fetch_html(full_text_url), parser)
                         t_a_tag = soup_.find("div", class_="contyishang")
                         full_text = (
                             t_a_tag.get_text()
@@ -162,15 +165,15 @@ def fetch_poem_details(u):
                     .replace("▲", "")
                     .strip()
                 )
-                if "展开阅读全文 ∨" in total_text:
-                    a_tag = trans_annotation_tag.find("a", text="展开阅读全文 ∨")
+                if extra_text in total_text:
+                    a_tag = trans_annotation_tag.find("a", text=extra_text)
                     href_attr = a_tag.get("href")
                     match = re.search(r"fanyiShow\((\d+),'([A-Z0-9]+)'\)", href_attr)
                     if match:
                         number = match.group(1)
                         string = match.group(2)
                         full_text_url = f"https://so.gushiwen.cn/nocdn/ajaxfanyi.aspx?id={number}&idjm={string}"
-                        soup_ = BeautifulSoup(fetch_html(full_text_url), "html.parser")
+                        soup_ = BeautifulSoup(fetch_html(full_text_url), parser)
                         t_a_tag = soup_.find("div", class_="contyishang")
                         full_text = (
                             t_a_tag.get_text()
@@ -209,8 +212,8 @@ def fetch_poem_details(u):
         appreciation_text = "".join(
             p.get_text().strip() for p in appreciation_paragraphs
         ).replace("\n", "")
-        if "展开阅读全文 ∨" in appreciation_text:
-            read_more_div = div.find("a", text="展开阅读全文 ∨")
+        if extra_text in appreciation_text:
+            read_more_div = div.find("a", text=extra_text)
             if read_more_div:
                 href_attr = read_more_div.get("href")
                 match = re.search(r"shangxiShow\((\d+),'([A-Z0-9]+)'\)", href_attr)
@@ -218,7 +221,7 @@ def fetch_poem_details(u):
                     number = match.group(1)
                     string = match.group(2)
                     full_text_url = f"https://so.gushiwen.cn/nocdn/ajaxshangxi.aspx?id={number}&idjm={string}"
-                    soup_ = BeautifulSoup(fetch_html(full_text_url), "html.parser")
+                    soup_ = BeautifulSoup(fetch_html(full_text_url), parser)
                     paragraphs = soup_.find("div", class_="contyishang").find_all("p")
                     appreciation_text = (
                         "".join(p.get_text().strip() for p in paragraphs)
